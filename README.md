@@ -48,10 +48,8 @@ Two steps:
 * Clone the repository or download it as the .zip file:
   - Clone by:
     ```
-    git clone https://github.com/RozanskiT/vidmapy.git
+    git clone https://github.com/piotrlojko/vidmapy-modernized.git
     ```
-  - Download zip from:
-  [vidmapy-master.zip](https://github.com/RozanskiT/vidmapy/archive/master.zip)
 * Download and untar directories with necessary atomic data in /vidmapy/kurucz/atomic_data/
   - Can be downloaded from : [atomic data](https://drive.google.com/drive/folders/1H-lFH69fyWvwWydgO8uBS3TIAdZ9hWdc?usp=sharing)
   
@@ -78,5 +76,5 @@ TODO: fulfill
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
 ## Acknowledgments
-
+* Tomasz Różański
 * Ewa Niemczura
