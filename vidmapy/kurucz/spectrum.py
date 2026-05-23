@@ -41,7 +41,7 @@ class Spectrum:
         self.lines_identification["wave"] *= 10.
     
     def read_spectrum_file(self, path):
-        df = pd.read_csv(path, header=None, index_col=False, delim_whitespace=True)
+        df = pd.read_csv(path, header=None, index_col=False, sep=r'\s+')
         self.wave = df[0].values
         self.flux = df[1].values 
         self.continuum = df[2].values 
