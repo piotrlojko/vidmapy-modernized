@@ -35,6 +35,34 @@ plt.show()
 ```
 ![Output plot of example code](docs/img/example_code_output.png)
 
+## Chemical abundance definitions
+
+VidmaPy passes abundances to ATLAS/SYNTHE using Kurucz-style `ABUNDANCE SCALE` and
+`ABUNDANCE CHANGE` records:
+
+* `metallicity` is the log10 scaling applied to all metals. In the output model it
+  becomes `ABUNDANCE SCALE = 10**metallicity` (so `metallicity=-0.3` corresponds to
+  half-solar metals).
+* `chemical_composition` maps element symbols (or atomic numbers) to Kurucz
+  `ABUNDANCE CHANGE` values. For H and He the values are fractional number
+  abundances, while elements with Z≥3 are log10 number fractions (e.g. `C=-2.7`).
+* You can set abundances directly with keyword arguments in `Parameters(...)` or
+  by editing `parameters.chemical_composition`. Use
+  `update_chemical_composition(..., relative=True)` to apply dex offsets relative
+  to the built-in reference composition.
+
+## Parallel spectra (no wavelength chunking)
+
+To parallelize multiple independent spectra (e.g., different abundances or
+rotation values), use the multiprocessing helper which keeps each spectrum on its
+full wavelength range:
+
+```python
+from vidmapy.kurucz.synthe import get_spectra_parallel
+
+spectra = get_spectra_parallel(model, parameters_list, processes=8, quiet=True)
+```
+
 ## Getting Started
 
 ### Prerequisites

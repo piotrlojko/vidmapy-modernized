@@ -23,6 +23,7 @@ import tempfile
 import glob
 import pandas as pd
 import copy
+import multiprocessing as mp
 
 class Synthe:
     def __init__(self):
@@ -189,6 +190,28 @@ class Synthe:
 
     def _get_broaden_string(self):
         return f"GAUSSIAN  {self.model.parameters.resolution:^8.1f}  RESOLUTION"
+
+
+def _run_synthe_worker(args):
+    model, parameters, quiet = args
+    worker = Synthe()
+    return worker.get_spectrum(model, parameters=parameters, quiet=quiet)
+
+def get_spectra_parallel(model, parameters_list, processes=None, quiet=False):
+    """
+    Compute spectra in parallel for a list of Parameters without wavelength chunking.
+    """
+    parameters_list = list(parameters_list)
+    if not parameters_list:
+        return []
+    if processes is None:
+        cpu_count = os.cpu_count() or 1
+        processes = min(len(parameters_list), cpu_count)
+    if processes <= 1:
+        return [_run_synthe_worker((model, parameters, quiet)) for parameters in parameters_list]
+    args = [(model, parameters, quiet) for parameters in parameters_list]
+    with mp.Pool(processes=processes) as pool:
+        return pool.map(_run_synthe_worker, args)
 
 def main():
     # http://wwwuser.oats.inaf.it/castelli/sources/linuxcodes.html
