@@ -211,13 +211,11 @@ def get_spectra_parallel(model, parameters_list, processes=None, quiet=False):
     Returns:
         List of Spectrum objects in the same order as parameters_list.
     """
-    import os
-
     parameters_list = list(parameters_list)
     if not parameters_list:
         return []
     if processes is None:
-        cpu_count = os.cpu_count() or 1
+        cpu_count = mp.cpu_count() or 1
         processes = min(len(parameters_list), cpu_count)
     if processes <= 1:
         return [_run_synthe_worker((model, parameters, quiet)) for parameters in parameters_list]
