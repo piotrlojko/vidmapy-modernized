@@ -200,6 +200,16 @@ def _run_synthe_worker(args):
 def get_spectra_parallel(model, parameters_list, processes=None, quiet=False):
     """
     Compute spectra in parallel for a list of Parameters without wavelength chunking.
+
+    Args:
+        model: Model instance used as the starting atmosphere.
+        parameters_list: Iterable of Parameters objects (one per spectrum).
+        processes: Number of worker processes to use. Defaults to the smaller of
+            CPU count and the number of parameter sets.
+        quiet: Passed through to get_spectrum to suppress parameter logging.
+
+    Returns:
+        List of Spectrum objects in the same order as parameters_list.
     """
     parameters_list = list(parameters_list)
     if not parameters_list:
