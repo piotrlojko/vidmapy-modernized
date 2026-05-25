@@ -211,6 +211,8 @@ def get_spectra_parallel(model, parameters_list, processes=None, quiet=False):
     Returns:
         List of Spectrum objects in the same order as parameters_list.
     """
+    import os
+
     parameters_list = list(parameters_list)
     if not parameters_list:
         return []
