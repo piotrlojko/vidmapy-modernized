@@ -35,6 +35,23 @@ plt.show()
 ```
 ![Output plot of example code](docs/img/example_code_output.png)
 
+### Performance tips
+* Reuse a prepared working directory to avoid re-linking atomic data:
+  ```python
+  synthe_worker = Synthe()
+  synthe_worker.prepare_work_dir("/tmp/synthe_work")
+  spectrum = synthe_worker.get_spectrum(model, work_dir="/tmp/synthe_work", reuse_workdir=True)
+  ```
+* Enable optional pre-SYNTHE cache to reuse xnfpelsyn/synbeg/rline2 outputs:
+  ```python
+  spectrum = synthe_worker.get_spectrum(model, cache_dir="/tmp/synthe_cache")
+  ```
+* Run batches in parallel:
+  ```python
+  from vidmapy.kurucz.synthe import get_spectra_parallel
+  spectra = get_spectra_parallel([model1, model2], [p1, p2], max_workers=2)
+  ```
+
 ## Getting Started
 
 ### Prerequisites
