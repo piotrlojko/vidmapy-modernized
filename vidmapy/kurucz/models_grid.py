@@ -26,7 +26,7 @@ class Grid:
     def _split_models(self):
         _models_strings = []
         _models = []
-        pattern = re.compile('^ *TEFF *(\d*[.]\d*) *GRAVITY *(\d*[.]\d*) *LTE')
+        pattern = re.compile(r'^ *TEFF *(\d*[.]\d*) *GRAVITY *(\d*[.]\d*) *LTE')
         for line in self._grid_data.splitlines():
             if pattern.search(line):
                 _models_strings.append([])

@@ -42,7 +42,7 @@ def test_update_composition_from_dict():
     param = parameters.Parameters()
     new_composition = {3: -11.92,  4: -13.64,  5:  -9.10,  6:  -4.52,  7:  -3.12,  8:  -3.21}
     param.update_chemical_composition(new_composition)
-    assert np.alltrue([new_composition[k] == param.chemical_composition[k] for k in new_composition])
+    assert np.all([new_composition[k] == param.chemical_composition[k] for k in new_composition])
 
 def test_set_paramters():
     param = parameters.Parameters()
@@ -72,6 +72,5 @@ def test_equals():
 
     param4.chemical_composition["H"] = 1
     assert param1 != param4
-
 
 
