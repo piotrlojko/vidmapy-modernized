@@ -28,9 +28,5 @@ setup(name='VidmaPy',
       package_data={'':['bin/*','grids/*','atomic_data/lines/*','atomic_data/molecules/*','atomic_data/ODF/NEW/*']},
 )
 
-# Way to install in develop mode
-# python setup.py develop
-# https://setuptools.readthedocs.io/en/latest/setuptools.html#development-mode
-
-# or simply install
-# python setup.py install
+# Install in editable mode with:
+# pip install -e .
