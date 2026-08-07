@@ -19,7 +19,7 @@ import numpy as np
 import copy
 
 class Model:
-    _number_regexp = '[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?'
+    _number_regexp = r'[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?'
 
     def __init__(self, path=None):
         self._parameters = Parameters()

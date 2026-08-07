@@ -26,7 +26,7 @@ def test_introduction():
 READ PUNCH
 MOLECULES ON
 READ MOLECULES
-FREQUENCIES 337 1 337 BIG
+FREQUENCIES 1221 1 1221 LITTLE
 CONVECTION OVER 1.25 0 36
 """
     md = model_definition.ModelDefinition()

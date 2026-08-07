@@ -1,6 +1,6 @@
 name: vidmapy-env
 dependencies:
-  - numpy
-  - pandas
-  - matplotlib
-  - jupyter
+  - numpy>=2.5.1
+  - pandas>=3.0.5
+  - matplotlib>=3.11.1
+  - jupyterlab>=4.6.2
