@@ -35,6 +35,12 @@ plt.show()
 ```
 ![Output plot of example code](docs/img/example_code_output.png)
 
+### Units of the computed spectrum
+* `spectrum.wave`: wavelength [Å]
+* `spectrum.flux`, `spectrum.continuum`: Eddington flux per unit wavelength, $H_\lambda$ [erg cm<sup>-2</sup> s<sup>-1</sup> Å<sup>-1</sup> sr<sup>-1</sup>]; the surface flux is $F_\lambda = 4\pi H_\lambda$
+* `spectrum.flux_nu`, `spectrum.continuum_nu`: Eddington flux per unit frequency, $H_\nu$ [erg cm<sup>-2</sup> s<sup>-1</sup> Hz<sup>-1</sup> sr<sup>-1</sup>], as written by SYNTHE, with $H_\lambda = H_\nu c/\lambda^2$
+* `spectrum.normed_flux`: `flux / continuum`
+
 ## Getting Started
 
 ### Prerequisites
