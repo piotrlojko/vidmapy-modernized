@@ -47,6 +47,21 @@ class Spectrum:
         sp.parameters = parameters
         return sp
 
+    @classmethod
+    def from_segments(cls, segments, parameters):
+        # Join spectra of consecutive wavelength segments, [(spectrum, wave_min, wave_max), ...],
+        # each contributing wave_min <= wave < wave_max (wave <= wave_max for the last one):
+        def in_segment(wave, i, wave_min, wave_max):
+            return (wave >= wave_min) & ((wave <= wave_max) if i == len(segments) - 1 else (wave < wave_max))
+        sp = cls()
+        for attribute in ["wave", "flux", "continuum", "normed_flux", "flux_nu", "continuum_nu"]:
+            setattr(sp, attribute, np.concatenate([getattr(segment, attribute)[in_segment(segment.wave, i, wave_min, wave_max)]
+                                                   for i, (segment, wave_min, wave_max) in enumerate(segments)]))
+        sp.lines_identification = pd.concat([segment.lines_identification[in_segment(segment.lines_identification["wave"], i, wave_min, wave_max)]
+                                             for i, (segment, wave_min, wave_max) in enumerate(segments)], ignore_index=True)
+        sp.parameters = parameters
+        return sp
+
     def read_lines_identification_file(self, path):
         format_string = "++++++++++^^^^^^^+++++^^^^^^^^^^^^+++++^^^^^^^^^^^^+++++++++^^^^^^^^+++++++"
         column_names = ["wave","loggf?","J1?","E1?","J2?","E2?","atom_symbol","literature","strength"]

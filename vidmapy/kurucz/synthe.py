@@ -22,7 +22,15 @@ import subprocess
 import tempfile
 import glob
 import pandas as pd
+import numpy as np
 import copy
+
+# With molecular lines, synthe.exe crashes on long wavelength ranges, so such spectra
+# are computed in segments with wave_max/wave_min <= SEGMENT_RATIO, each extended by
+# SEGMENT_MARGIN on both sides to include the wings of lines beyond its edges and to
+# keep the edge effects of the rotational and instrumental broadening out of the result:
+SEGMENT_RATIO = 1.5
+SEGMENT_MARGIN = 0.02
 
 class Synthe:
     def __init__(self):
@@ -39,8 +47,23 @@ class Synthe:
         # SYNTHE adds the VTURB column of the model and TURBV of synbeg in quadrature,
         # so the microturbulence is passed only through the model:
         self.model.set_microturbulence(self.model.parameters.microturbulence)
+        if molecules:
+            return self._get_spectrum_in_segments(self.model)
         spectrum = self._create_temp_direcotry_and_run_SYNTHE(self.model, molecules)
         return spectrum
+
+    def _get_spectrum_in_segments(self, model):
+        wave_min, wave_max = model.parameters.wave_min, model.parameters.wave_max
+        no_of_segments = max(1, int(np.ceil(np.log(wave_max/wave_min)/np.log(SEGMENT_RATIO))))
+        edges = wave_min*(wave_max/wave_min)**(np.arange(no_of_segments + 1)/no_of_segments)
+        segments = []
+        for segment_min, segment_max in zip(edges[:-1], edges[1:]):
+            self.model = copy.deepcopy(model)
+            self.model.parameters.wave_min = segment_min*(1. - SEGMENT_MARGIN)
+            self.model.parameters.wave_max = segment_max*(1. + SEGMENT_MARGIN)
+            segments.append((self._create_temp_direcotry_and_run_SYNTHE(self.model, molecules=True), segment_min, segment_max))
+        self.model = model
+        return Spectrum.from_segments(segments, model.parameters)
 
     def _create_temp_direcotry_and_run_SYNTHE(self, model, molecules=False):
         with tempfile.TemporaryDirectory(prefix="synthe_") as tmpdirname:
@@ -156,6 +179,8 @@ class Synthe:
                             cwd=cwd)
         outs, errs = process.communicate(input_data)
         process.wait()
+        if process.returncode != 0:
+            raise RuntimeError(f"{os.path.basename(program_path)} failed with exit code {process.returncode}")
 
     def _extend_model_for_SYNTHE(self, model):
         s = [
