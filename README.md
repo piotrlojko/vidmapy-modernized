@@ -63,7 +63,7 @@ Two steps:
 
 * Move into vidmapy directory
 ```
-cd vidmapy
+cd vidmapy-modernized
 ```
 * To install VidmaPy in currently activated environment run:
 ```
