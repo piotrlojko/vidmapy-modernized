@@ -61,7 +61,7 @@ sun_metadata_and_header = f"""# Spectrum generated from the Kurucz ATLAS and SYN
 # [M/H]={sun_params.metallicity} [dex]
 # microturbulence={sun_params.microturbulence} [km/s]
 # vsini={sun_params.vsini} [km/s]
-# spectral resolution={sun_params.resolution} [km/s]
+# spectral resolution={sun_params.resolution} [-]
 # wavelength range=({sun_params.wave_min}-{sun_params.wave_max}) [Å]
 #
 # wavelength [Å]    Eddington flux [erg/cm^2/s/Å]    continuum [erg/cm^2/s/Å]    normalized_flux [-]

@@ -61,7 +61,7 @@ vega_metadata_and_header = f"""# Spectrum generated from the Kurucz ATLAS and SY
 # [M/H]={vega_params.metallicity} [dex]
 # microturbulence={vega_params.microturbulence} [km/s]
 # vsini={vega_params.vsini} [km/s]
-# spectral resolution={vega_params.resolution} [km/s]
+# spectral resolution={vega_params.resolution} [-]
 # wavelength range=({vega_params.wave_min}-{vega_params.wave_max}) [Å]
 #
 # wavelength [Å]    Eddington flux [erg/cm^2/s/Å]    continuum [erg/cm^2/s/Å]    normalized_flux [-]
