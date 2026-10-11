@@ -49,6 +49,7 @@ plt.show()
 * ATLAS9 cannot rescale the line opacity of its opacity distribution functions (ODFs), so `Atlas` uses the scaled-solar ODF (`{p|m}XXbigN.bdf`) and Rosseland table (`kap{p|m}XX.ros`) from `atomic_data/ODF/NEW` closest to the requested `metallicity`, then `microturbulence`, and warns when no exact match exists. Changes of individual abundances alter the continuous opacity and the equation of state, but not the ODF line opacity.
 * `microturbulence` is in km/s. A model is taken directly from the grid only when all its parameters match; the default grid was computed with 2 km/s. `Synthe` computes the spectrum with exactly the requested `microturbulence`, whether the model comes from the grid or from ATLAS.
 * By default `Synthe` uses only the atomic lines of `gfall08oct17.dat`. `synthe_worker.get_spectrum(model, molecules=True)` adds every molecular line list in `atomic_data/molecules` (C<sub>2</sub>, CH, CN, CO, H<sub>2</sub>, MgH, NH, OH, SiH, SiO), which matters for cool stars, e.g. the solar flux below about 4500 Å, at the cost of a longer computation. With molecular lines `synthe.exe` crashes on long wavelength ranges, so `Synthe` then computes the spectrum in segments spanning at most a factor of 1.5 in wavelength and joins them. TiO and H<sub>2</sub>O lines are not included.
+* `synthe.exe` fails when the computed wavelength range starts in the far wing of Lyman α, between about 1220 and 1980 Å. With `molecules=True` the segments avoid this interval; otherwise let `wave_min` lie outside it.
 
 ## Getting Started
 
