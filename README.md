@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+> ## This repo is a modern fork of the original `VidmaPy` software by ***Tomasz Różański*** and ***Collaborators***. The code itself is functional and tested.
+
+
 # VidmaPy - wrapper for Kurucz's ATLAS/SYNTHE codes
 
 VidmaPy is a python module that enable user to use the power of ATLAS/SYNTHE codes with just few lines of python code.
@@ -56,16 +60,20 @@ Two steps:
     ```
     git clone https://github.com/piotrlojko/vidmapy-modernized.git
     ```
-* Download and untar directories with necessary atomic data in /vidmapy/kurucz/atomic_data/
+* Download and untar directories with necessary atomic data in `/vidmapy/kurucz/atomic_data/`:
   - Can be downloaded from : [atomic data](https://drive.google.com/drive/folders/1H-lFH69fyWvwWydgO8uBS3TIAdZ9hWdc?usp=sharing)
+  - And extracted via:
+    ```
+    tar -xf atom_data_kurucz.tar.xz -C ~/vidmapy-modernized/vidmapy/kurucz/atomic_data/
+    ```
   
 ### Install
 
-* Move into vidmapy directory
+* Move to the top-level vidmapy directory:
 ```
 cd vidmapy-modernized
 ```
-* To install VidmaPy in currently activated environment run:
+* Install VidmaPy in currently activated environment:
 ```
 pip install .
 ```
@@ -74,8 +82,6 @@ or if you want to develop VidmaPy:
 pip install -e .
 ```
   
-## Tutorial
-TODO: fulfill
 
 ## License
 
