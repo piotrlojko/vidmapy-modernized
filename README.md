@@ -60,8 +60,8 @@ Two steps:
     ```
     git clone https://github.com/piotrlojko/vidmapy-modernized.git
     ```
-* Download and untar directories with necessary atomic data in `/vidmapy/kurucz/atomic_data/`:
-  - Can be downloaded from : [atomic data](https://drive.google.com/drive/folders/1H-lFH69fyWvwWydgO8uBS3TIAdZ9hWdc?usp=sharing)
+* Download and untar the `atom_data_kurucz.tar.xz` with necessary atomic data in `/vidmapy/kurucz/atomic_data/`:
+  - Can be downloaded from : [atomic data + example spectra](https://drive.google.com/drive/folders/1arYoJCUaMMkw-8Fd1f93Pan1DwQLbdON?usp=sharing)
   - And extracted via:
     ```
     tar -xf atom_data_kurucz.tar.xz -C ~/vidmapy-modernized/vidmapy/kurucz/atomic_data/
