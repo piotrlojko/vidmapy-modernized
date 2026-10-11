@@ -5,6 +5,14 @@ Implements class that contains all spectrum data:
 - wave, flux, contrinuum, normed_flux
 - parameters of spectrum         if availible
 - lines identification dataframe if availible
+
+Units:
+- wave                  : wavelength [A]
+- flux, continuum       : Eddington flux per unit wavelength, H_lambda [erg cm^-2 s^-1 A^-1 sr^-1]
+- flux_nu, continuum_nu : Eddington flux per unit frequency, H_nu [erg cm^-2 s^-1 Hz^-1 sr^-1],
+                          as written by SYNTHE
+- normed_flux           : flux / continuum [-]
+The physical surface flux is F = 4 * pi * H.
 """
 
 
@@ -14,6 +22,8 @@ import numpy as np
 import pandas as pd
 import os
 
+SPEED_OF_LIGHT = 2.99792458e18 # [A s^-1]
+
 
 class Spectrum:
     def __init__(self):
@@ -21,6 +31,9 @@ class Spectrum:
         self.flux = None 
         self.continuum = None 
         self.normed_flux = None
+
+        self.flux_nu = None
+        self.continuum_nu = None
 
         self.parameters = None
 
@@ -43,9 +56,16 @@ class Spectrum:
     def read_spectrum_file(self, path):
         df = pd.read_csv(path, header=None, index_col=False, sep=r'\s+')
         self.wave = df[0].values
-        self.flux = df[1].values 
-        self.continuum = df[2].values 
+        # SYNTHE writes the Eddington flux per unit frequency, H_nu, so convert it
+        # to the flux per unit wavelength, H_lambda = H_nu * c / lambda^2:
+        self.flux_nu = df[1].values
+        self.continuum_nu = df[2].values
+        self.flux = self._per_unit_wavelength(self.flux_nu)
+        self.continuum = self._per_unit_wavelength(self.continuum_nu)
         self.normed_flux = df[3].values
+
+    def _per_unit_wavelength(self, flux_nu):
+        return flux_nu * SPEED_OF_LIGHT / self.wave**2
 
     def __str__(self):
         return self.__repr__()
