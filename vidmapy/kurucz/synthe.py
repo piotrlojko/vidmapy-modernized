@@ -32,23 +32,28 @@ class Synthe:
         self._kurucz_bin_path = os.path.join(self._kurucz_directory, 'bin')
         self._atomic_data_path = os.path.join(self._kurucz_directory, "atomic_data")
 
-    def get_spectrum(self, model, parameters=None, quiet=False):
+    def get_spectrum(self, model, parameters=None, quiet=False, molecules=False):
         self.model = copy.deepcopy(model)
         if parameters is not None:
             self.model.parameters.get_synthe_parameters(parameters,quiet=quiet)
-        spectrum = self._create_temp_direcotry_and_run_SYNTHE(self.model)
+        # SYNTHE adds the VTURB column of the model and TURBV of synbeg in quadrature,
+        # so the microturbulence is passed only through the model:
+        self.model.set_microturbulence(self.model.parameters.microturbulence)
+        spectrum = self._create_temp_direcotry_and_run_SYNTHE(self.model, molecules)
         return spectrum
 
-    def _create_temp_direcotry_and_run_SYNTHE(self, model):
+    def _create_temp_direcotry_and_run_SYNTHE(self, model, molecules=False):
         with tempfile.TemporaryDirectory(prefix="synthe_") as tmpdirname:
-            spectrum = self._compute_spectrum(tmpdirname, model)
-        return spectrum 
+            spectrum = self._compute_spectrum(tmpdirname, model, molecules)
+        return spectrum
 
-    def _compute_spectrum(self, tmpdirname, model):
+    def _compute_spectrum(self, tmpdirname, model, molecules=False):
         self._run_xnfpelsyn(tmpdirname, model)
         self._run_synbeg(tmpdirname, model)
         self._run_rline2(tmpdirname, model) #  rgfalllinesnew.for  ?
-        # self._run_rmolecasc(tmpdirname, model) # Optionally! Include molecular lines
+        if molecules:
+            for molecule_file in self._get_molecule_files():
+                self._run_rmolecasc(tmpdirname, model, molecule_file=molecule_file)
         self._run_synthe(tmpdirname, model)
         self._run_spectrv(tmpdirname, model)
         self._run_rotate(tmpdirname, model)
@@ -91,7 +96,10 @@ class Synthe:
                         os.path.join(self._kurucz_bin_path, "rmolecasc.exe")
                         )
         os.remove(os.path.join(tmpdirname,"fort.11"))
-    
+
+    def _get_molecule_files(self):
+        return sorted(f for f in os.listdir(os.path.join(self._atomic_data_path, "molecules")) if f.endswith(".dat"))
+
 
     def _run_synthe(self, tmpdirname, model):
         self._call_external_code(tmpdirname,
@@ -163,7 +171,7 @@ class Synthe:
 
     def _get_synbeg_input(self, model):
         s = [
-            f"AIR        {self.model.parameters.wave_min/10.:6.1f}    {self.model.parameters.wave_max/10.:6.1f}    600000.    {self.model.parameters.microturbulence:5.2f}    0     30    .0001     1    0\n",
+            f"AIR        {self.model.parameters.wave_min/10.:6.1f}    {self.model.parameters.wave_max/10.:6.1f}    600000.     0.00    0     30    .0001     1    0\n",
             "AIRorVAC  WLBEG     WLEND     RESOLU    TURBV  IFNLTE LINOUT CUTOFF        NREAD\n"
         ]
         return "".join(s)

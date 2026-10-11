@@ -32,7 +32,8 @@ CONVECTION OVER 1.25 0 36
     md = model_definition.ModelDefinition()
     assert md._introduction() == correct_intoduction
 
-@pytest.mark.parametrize("microturbulence,correct", [(0.0,"VTURB 0.0E+00\n"), (1e5,"VTURB 1.0E+05\n"), (9.2e5,"VTURB 9.2E+05\n")])
+# microturbulence in km/s, VTURB in cm/s:
+@pytest.mark.parametrize("microturbulence,correct", [(0.0,"VTURB 0.000E+00\n"), (1.0,"VTURB 1.000E+05\n"), (9.2,"VTURB 9.200E+05\n"), (1.25,"VTURB 1.250E+05\n")])
 def test_turbulence(microturbulence, correct):
     parameters = MagicMock()
     parameters.microturbulence = microturbulence

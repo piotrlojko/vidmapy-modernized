@@ -16,10 +16,12 @@ from vidmapy.kurucz.models_grid import Grid
 from vidmapy.kurucz.model_definition import ModelDefinition
 from vidmapy.kurucz.parameters import Parameters
 import os
+import re
 import subprocess
 import tempfile
 import copy
 import stat
+import warnings
 
 class Atlas:
     def __init__(self):
@@ -84,9 +86,10 @@ class Atlas:
 
     def _compute_model(self, tmpdirname, initial_model):
         md = ModelDefinition()
+        odf_path, rosseland_path = self._get_opacity_files(self.parameters)
         # Link necessary data:
-        os.symlink(os.path.join(self._atomic_data_path,"ODF","NEW","kapp02.ros"), os.path.join(tmpdirname,"fort.1"))
-        os.symlink(os.path.join(self._atomic_data_path,"ODF","NEW","p00big2.bdf"), os.path.join(tmpdirname,"fort.9"))
+        os.symlink(rosseland_path, os.path.join(tmpdirname,"fort.1"))
+        os.symlink(odf_path, os.path.join(tmpdirname,"fort.9"))
         os.symlink(os.path.join(self._atomic_data_path,"lines","molecules.dat"), os.path.join(tmpdirname,"fort.2"))
         # Create intial model:
         initial_model.save_model(os.path.join(tmpdirname, "fort.3"))
@@ -101,6 +104,32 @@ class Atlas:
         process.wait()
         
         return Model.with_extended_set_of_parameters(os.path.join(tmpdirname,"fort.7"), self.parameters)
+
+    def _get_opacity_files(self, parameters):
+        # ATLAS9 cannot rescale the line opacity of an ODF, so use the scaled-solar ODF
+        # ({p|m}<10*|[M/H]|>big<vturb>.bdf) closest in metallicity, then in microturbulence,
+        # and the Rosseland opacity table of the same metallicity:
+        odf_directory = os.path.join(self._atomic_data_path, "ODF", "NEW")
+        odfs = []
+        for file_name in sorted(os.listdir(odf_directory)):
+            match = re.fullmatch(r"([pm])(\d\d)big(\d+)\.bdf", file_name)
+            if match:
+                metallicity = (1 if match.group(1) == "p" else -1) * int(match.group(2)) / 10.
+                odfs.append((metallicity, float(match.group(3)), file_name))
+        if not odfs:
+            raise FileNotFoundError(f"No opacity distribution functions (*big*.bdf) in {odf_directory}")
+
+        metallicity = min(sorted({odf[0] for odf in odfs}), key=lambda m: abs(m - parameters.metallicity))
+        _, microturbulence, odf_name = min([odf for odf in odfs if odf[0] == metallicity],
+                                           key=lambda odf: abs(odf[1] - parameters.microturbulence))
+        if abs(metallicity - parameters.metallicity) > 1e-3 or abs(microturbulence - parameters.microturbulence) > 1e-3:
+            warnings.warn(f"No ODF for [M/H] = {parameters.metallicity:+.2f}, vturb = {parameters.microturbulence:g} km/s "
+                          f"in {odf_directory}; ATLAS uses {odf_name} ([M/H] = {metallicity:+.1f}, vturb = {microturbulence:g} km/s)")
+
+        rosseland_path = os.path.join(odf_directory, f"kap{odf_name[:3]}.ros")
+        if not os.path.exists(rosseland_path):
+            raise FileNotFoundError(f"No Rosseland opacity table {rosseland_path} for {odf_name}")
+        return os.path.join(odf_directory, odf_name), rosseland_path
 
 def main():
     pass
