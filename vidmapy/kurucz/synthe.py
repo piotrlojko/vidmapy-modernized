@@ -31,6 +31,9 @@ import copy
 # keep the edge effects of the rotational and instrumental broadening out of the result:
 SEGMENT_RATIO = 1.5
 SEGMENT_MARGIN = 0.02
+# synthe.exe also corrupts its memory when the computed range starts in the far wing
+# of Lyman alpha, so no segment starts inside this interval [A]:
+LYMAN_ALPHA_WING = (1220., 1980.)
 
 class Synthe:
     def __init__(self):
@@ -53,17 +56,33 @@ class Synthe:
         return spectrum
 
     def _get_spectrum_in_segments(self, model):
-        wave_min, wave_max = model.parameters.wave_min, model.parameters.wave_max
-        no_of_segments = max(1, int(np.ceil(np.log(wave_max/wave_min)/np.log(SEGMENT_RATIO))))
-        edges = wave_min*(wave_max/wave_min)**(np.arange(no_of_segments + 1)/no_of_segments)
         segments = []
-        for segment_min, segment_max in zip(edges[:-1], edges[1:]):
+        for segment_min, segment_max in self._get_segments(model.parameters.wave_min, model.parameters.wave_max):
             self.model = copy.deepcopy(model)
-            self.model.parameters.wave_min = segment_min*(1. - SEGMENT_MARGIN)
-            self.model.parameters.wave_max = segment_max*(1. + SEGMENT_MARGIN)
+            self.model.parameters.wave_min, self.model.parameters.wave_max = self._get_computed_range(segment_min, segment_max)
             segments.append((self._create_temp_direcotry_and_run_SYNTHE(self.model, molecules=True), segment_min, segment_max))
         self.model = model
         return Spectrum.from_segments(segments, model.parameters)
+
+    def _get_segments(self, wave_min, wave_max):
+        # The far wing of Lyman alpha (with the margin at its red end) is a single segment:
+        wing_min, wing_max = LYMAN_ALPHA_WING[0], LYMAN_ALPHA_WING[1]*(1. + SEGMENT_MARGIN)
+        breaks = [w for w in (wing_min, wing_max) if wave_min < w < wave_max] if wave_min < LYMAN_ALPHA_WING[1] else []
+        segments = []
+        for piece_min, piece_max in zip([wave_min] + breaks, breaks + [wave_max]):
+            if piece_min >= wing_min and piece_max <= wing_max:
+                no_of_segments = 1
+            else:
+                no_of_segments = max(1, int(np.ceil(np.log(piece_max/piece_min)/np.log(SEGMENT_RATIO))))
+            edges = piece_min*(piece_max/piece_min)**(np.arange(no_of_segments + 1)/no_of_segments)
+            segments += list(zip(edges[:-1], edges[1:]))
+        return segments
+
+    def _get_computed_range(self, segment_min, segment_max):
+        computed_min = segment_min*(1. - SEGMENT_MARGIN)
+        if LYMAN_ALPHA_WING[0] < computed_min < LYMAN_ALPHA_WING[1]:
+            computed_min = LYMAN_ALPHA_WING[1] if segment_min >= LYMAN_ALPHA_WING[1] else LYMAN_ALPHA_WING[0]*(1. - SEGMENT_MARGIN)
+        return computed_min, segment_max*(1. + SEGMENT_MARGIN)
 
     def _create_temp_direcotry_and_run_SYNTHE(self, model, molecules=False):
         with tempfile.TemporaryDirectory(prefix="synthe_") as tmpdirname:

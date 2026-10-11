@@ -97,6 +97,21 @@ def test_spectrum_with_molecules_computed_in_segments():
     assert spectrum.lines_identification["wave"].between(4000., 9000.).all()
     assert spectrum.parameters.wave_min == 4000. and spectrum.parameters.wave_max == 9000.
 
+@pytest.mark.parametrize("wave_min,wave_max", [(500., 13000.), (1150., 10000.), (1100., 1500.), (1500., 1800.),
+                                               (1990., 3000.), (2000., 10000.), (4000., 9000.)])
+def test_segments_avoid_lyman_alpha_wing(wave_min, wave_max):
+    worker = Synthe()
+    segments = worker._get_segments(wave_min, wave_max)
+    assert segments[0][0] == wave_min
+    assert segments[-1][1] == pytest.approx(wave_max)
+    assert all(a[1] == pytest.approx(b[0]) and a[0] < a[1] for a, b in zip(segments[:-1], segments[1:]))
+    for segment_min, segment_max in segments:
+        computed_min, computed_max = worker._get_computed_range(segment_min, segment_max)
+        assert not synthe.LYMAN_ALPHA_WING[0] < computed_min < synthe.LYMAN_ALPHA_WING[1]
+        assert computed_min < segment_min and computed_max > segment_max
+        # Longest range that synthe.exe completed with all molecular lines was a factor 1.85:
+        assert computed_max/computed_min < 1.8
+
 def test_failing_program_raises():
     with pytest.raises(RuntimeError, match="false failed"):
         Synthe()._call_external_code(".", "/bin/false")
