@@ -44,7 +44,8 @@ class ModelDefinition:
         #     mantissa, exp = s.split('e')
         #     # add 1 to digits as 1 is taken by sign +/-
         #     return "%se%+0*d"%(mantissa, exp_digits+1, int(exp))
-        return f"VTURB {parameters.microturbulence:.1E}\n"
+        # ATLAS expects VTURB in cm/s, microturbulence is given in km/s:
+        return f"VTURB {parameters.microturbulence*1.e5:.3E}\n"
 
     def _title(self, parameters):
         s = [

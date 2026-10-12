@@ -450,3 +450,60 @@ def test_get_best_model(mock_file, atlas_model):
 
     assert initial_model.teff == 8000.
     assert initial_model.logg == 4.0
+
+import os
+import warnings
+from vidmapy.kurucz.parameters import Parameters
+
+@pytest.fixture
+def atomic_data(tmp_path):
+    odf_directory = tmp_path / "ODF" / "NEW"
+    odf_directory.mkdir(parents=True)
+    for name in ["p00big1.bdf", "p00big2.bdf", "m05big1.bdf", "m05big2.bdf", "m05abig2.bdf", "p05big2.bdf",
+                 "kapp00.ros", "kapp02.ros", "kapm05.ros", "kapp05.ros"]:
+        (odf_directory / name).touch()
+    return tmp_path
+
+@pytest.mark.parametrize("metallicity,microturbulence,odf,rosseland",
+                            [(0.0 , 2.0, "p00big2.bdf", "kapp00.ros"),
+                             (0.0 , 1.0, "p00big1.bdf", "kapp00.ros"),
+                             (-0.5, 2.0, "m05big2.bdf", "kapm05.ros"),
+                             (0.5 , 2.0, "p05big2.bdf", "kapp05.ros"),
+                            ]
+                        )
+def test_opacity_files_for_metallicity_and_microturbulence(atlas_model, atomic_data, metallicity, microturbulence, odf, rosseland):
+    atlas_model._atomic_data_path = str(atomic_data)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        odf_path, rosseland_path = atlas_model._get_opacity_files(Parameters(metallicity=metallicity, microturbulence=microturbulence))
+    assert os.path.basename(odf_path) == odf
+    assert os.path.basename(rosseland_path) == rosseland
+
+@pytest.mark.parametrize("metallicity,microturbulence,odf",
+                            [(-0.3, 2.0 , "m05big2.bdf"),
+                             (0.0 , 10.0, "p00big2.bdf"),
+                             (-0.5, 3.0 , "m05big2.bdf"),
+                            ]
+                        )
+def test_closest_opacity_files_with_warning(atlas_model, atomic_data, metallicity, microturbulence, odf):
+    atlas_model._atomic_data_path = str(atomic_data)
+    with pytest.warns(UserWarning, match=odf):
+        odf_path, _ = atlas_model._get_opacity_files(Parameters(metallicity=metallicity, microturbulence=microturbulence))
+    assert os.path.basename(odf_path) == odf
+
+def test_missing_rosseland_table(atlas_model, tmp_path):
+    (tmp_path / "ODF" / "NEW").mkdir(parents=True)
+    (tmp_path / "ODF" / "NEW" / "p00big2.bdf").touch()
+    atlas_model._atomic_data_path = str(tmp_path)
+    with pytest.raises(FileNotFoundError, match="kapp00.ros"):
+        atlas_model._get_opacity_files(Parameters())
+
+def test_grid_model_used_only_for_its_microturbulence(atlas_model):
+    # The default grid holds models computed with vturb = 2 km/s:
+    atlas_model._create_temporary_directory_and_run_ATLAS = MagicMock(return_value="computed by ATLAS")
+
+    grid_model = atlas_model.get_model(Parameters(teff=5750, logg=4.5, metallicity=0.0, microturbulence=2.0))
+    assert grid_model.teff == 5750.
+    assert grid_model.parameters.microturbulence == 2.0
+
+    assert atlas_model.get_model(Parameters(teff=5750, logg=4.5, metallicity=0.0, microturbulence=1.0)) == "computed by ATLAS"

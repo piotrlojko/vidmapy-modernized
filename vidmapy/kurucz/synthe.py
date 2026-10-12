@@ -22,7 +22,18 @@ import subprocess
 import tempfile
 import glob
 import pandas as pd
+import numpy as np
 import copy
+
+# With molecular lines, synthe.exe crashes on long wavelength ranges, so such spectra
+# are computed in segments with wave_max/wave_min <= SEGMENT_RATIO, each extended by
+# SEGMENT_MARGIN on both sides to include the wings of lines beyond its edges and to
+# keep the edge effects of the rotational and instrumental broadening out of the result:
+SEGMENT_RATIO = 1.5
+SEGMENT_MARGIN = 0.02
+# synthe.exe also corrupts its memory when the computed range starts in the far wing
+# of Lyman alpha, so no segment starts inside this interval [A]:
+LYMAN_ALPHA_WING = (1220., 1980.)
 
 class Synthe:
     def __init__(self):
@@ -32,23 +43,59 @@ class Synthe:
         self._kurucz_bin_path = os.path.join(self._kurucz_directory, 'bin')
         self._atomic_data_path = os.path.join(self._kurucz_directory, "atomic_data")
 
-    def get_spectrum(self, model, parameters=None, quiet=False):
+    def get_spectrum(self, model, parameters=None, quiet=False, molecules=False):
         self.model = copy.deepcopy(model)
         if parameters is not None:
             self.model.parameters.get_synthe_parameters(parameters,quiet=quiet)
-        spectrum = self._create_temp_direcotry_and_run_SYNTHE(self.model)
+        # SYNTHE adds the VTURB column of the model and TURBV of synbeg in quadrature,
+        # so the microturbulence is passed only through the model:
+        self.model.set_microturbulence(self.model.parameters.microturbulence)
+        if molecules:
+            return self._get_spectrum_in_segments(self.model)
+        spectrum = self._create_temp_direcotry_and_run_SYNTHE(self.model, molecules)
         return spectrum
 
-    def _create_temp_direcotry_and_run_SYNTHE(self, model):
-        with tempfile.TemporaryDirectory(prefix="synthe_") as tmpdirname:
-            spectrum = self._compute_spectrum(tmpdirname, model)
-        return spectrum 
+    def _get_spectrum_in_segments(self, model):
+        segments = []
+        for segment_min, segment_max in self._get_segments(model.parameters.wave_min, model.parameters.wave_max):
+            self.model = copy.deepcopy(model)
+            self.model.parameters.wave_min, self.model.parameters.wave_max = self._get_computed_range(segment_min, segment_max)
+            segments.append((self._create_temp_direcotry_and_run_SYNTHE(self.model, molecules=True), segment_min, segment_max))
+        self.model = model
+        return Spectrum.from_segments(segments, model.parameters)
 
-    def _compute_spectrum(self, tmpdirname, model):
+    def _get_segments(self, wave_min, wave_max):
+        # The far wing of Lyman alpha (with the margin at its red end) is a single segment:
+        wing_min, wing_max = LYMAN_ALPHA_WING[0], LYMAN_ALPHA_WING[1]*(1. + SEGMENT_MARGIN)
+        breaks = [w for w in (wing_min, wing_max) if wave_min < w < wave_max] if wave_min < LYMAN_ALPHA_WING[1] else []
+        segments = []
+        for piece_min, piece_max in zip([wave_min] + breaks, breaks + [wave_max]):
+            if piece_min >= wing_min and piece_max <= wing_max:
+                no_of_segments = 1
+            else:
+                no_of_segments = max(1, int(np.ceil(np.log(piece_max/piece_min)/np.log(SEGMENT_RATIO))))
+            edges = piece_min*(piece_max/piece_min)**(np.arange(no_of_segments + 1)/no_of_segments)
+            segments += list(zip(edges[:-1], edges[1:]))
+        return segments
+
+    def _get_computed_range(self, segment_min, segment_max):
+        computed_min = segment_min*(1. - SEGMENT_MARGIN)
+        if LYMAN_ALPHA_WING[0] < computed_min < LYMAN_ALPHA_WING[1]:
+            computed_min = LYMAN_ALPHA_WING[1] if segment_min >= LYMAN_ALPHA_WING[1] else LYMAN_ALPHA_WING[0]*(1. - SEGMENT_MARGIN)
+        return computed_min, segment_max*(1. + SEGMENT_MARGIN)
+
+    def _create_temp_direcotry_and_run_SYNTHE(self, model, molecules=False):
+        with tempfile.TemporaryDirectory(prefix="synthe_") as tmpdirname:
+            spectrum = self._compute_spectrum(tmpdirname, model, molecules)
+        return spectrum
+
+    def _compute_spectrum(self, tmpdirname, model, molecules=False):
         self._run_xnfpelsyn(tmpdirname, model)
         self._run_synbeg(tmpdirname, model)
         self._run_rline2(tmpdirname, model) #  rgfalllinesnew.for  ?
-        # self._run_rmolecasc(tmpdirname, model) # Optionally! Include molecular lines
+        if molecules:
+            for molecule_file in self._get_molecule_files():
+                self._run_rmolecasc(tmpdirname, model, molecule_file=molecule_file)
         self._run_synthe(tmpdirname, model)
         self._run_spectrv(tmpdirname, model)
         self._run_rotate(tmpdirname, model)
@@ -91,7 +138,10 @@ class Synthe:
                         os.path.join(self._kurucz_bin_path, "rmolecasc.exe")
                         )
         os.remove(os.path.join(tmpdirname,"fort.11"))
-    
+
+    def _get_molecule_files(self):
+        return sorted(f for f in os.listdir(os.path.join(self._atomic_data_path, "molecules")) if f.endswith(".dat"))
+
 
     def _run_synthe(self, tmpdirname, model):
         self._call_external_code(tmpdirname,
@@ -148,6 +198,8 @@ class Synthe:
                             cwd=cwd)
         outs, errs = process.communicate(input_data)
         process.wait()
+        if process.returncode != 0:
+            raise RuntimeError(f"{os.path.basename(program_path)} failed with exit code {process.returncode}")
 
     def _extend_model_for_SYNTHE(self, model):
         s = [
@@ -163,7 +215,7 @@ class Synthe:
 
     def _get_synbeg_input(self, model):
         s = [
-            f"AIR        {self.model.parameters.wave_min/10.:6.1f}    {self.model.parameters.wave_max/10.:6.1f}    600000.    {self.model.parameters.microturbulence:5.2f}    0     30    .0001     1    0\n",
+            f"AIR        {self.model.parameters.wave_min/10.:6.1f}    {self.model.parameters.wave_max/10.:6.1f}    600000.     0.00    0     30    .0001     1    0\n",
             "AIRorVAC  WLBEG     WLEND     RESOLU    TURBV  IFNLTE LINOUT CUTOFF        NREAD\n"
         ]
         return "".join(s)

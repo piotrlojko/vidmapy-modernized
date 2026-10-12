@@ -281,3 +281,21 @@ def test_output_model_as_string():
 
     output_model_string = m.get_model_string()
     assert True # Unfortunatelly manual check
+def test_microturbulence_read_from_vturb_column(file_mock):
+    # VTURB column in cm/s, microturbulence in km/s:
+    m = model.Model()
+    m.model_from_string(model_text)
+    assert m.parameters.microturbulence == 2.0
+
+    m = model.Model()
+    m._read_model(file_mock)
+    assert m.parameters.microturbulence == 0.0
+
+def test_set_microturbulence():
+    m = model.Model()
+    m.model_from_string(model_text)
+    m.set_microturbulence(3.5)
+
+    assert m.parameters.microturbulence == 3.5
+    assert all(m.structure["VTURB"] == 3.5e5)
+    assert "3.500E+05" in m.get_model_string()

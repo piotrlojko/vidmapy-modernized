@@ -120,6 +120,8 @@ class Model:
             if reading_depth_dependent_data["no_of_read_lines"] == self._no_of_depth_points:
                 self._depth_dependend_data = np.array(self._depth_dependend_data).T
                 reading_depth_dependent_data["reading_state"] = False
+                if "VTURB" in self._columns_of_depth_dependent_data:
+                    self._parameters.microturbulence = self._extract_microturbulence()
 
         def read_model_paramters():
             if "TEFF" in line:
@@ -161,6 +163,14 @@ class Model:
     
     def _extract_metallicity(self, line):
         return np.log10(self._read_first_number_after_word("ABUNDANCE SCALE", line))
+
+    def _extract_microturbulence(self):
+        # VTURB column is in cm/s, microturbulence in km/s:
+        return float(self.structure["VTURB"][0]) / 1.e5
+
+    def set_microturbulence(self, microturbulence):
+        self._parameters.microturbulence = microturbulence
+        self._depth_dependend_data[self._columns_of_depth_dependent_data.index("VTURB"), :] = microturbulence * 1.e5
 
     def _read_first_number_after_word(self, word, line):
         x = re.findall(f"{word}.*?({self._number_regexp})", line)
