@@ -1,6 +1,8 @@
 > [!IMPORTANT]
-> ## This repo is a modern fork of the original `VidmaPy` software by ***Tomasz Różański*** and ***Collaborators***. The code is functional and tested.
+> ### This repository contains a modern fork of the original `VidmaPy` software by ***Tomasz Różański*** and ***Collaborators***. The code is functional and tested.
 
+> [!CAUTION]
+> ### This code is co-created by AI. If you really don't like AI-generated software, you should consider using the original one.
 
 # VidmaPy - wrapper for Kurucz's ATLAS/SYNTHE codes
 
