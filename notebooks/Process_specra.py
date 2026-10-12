@@ -35,7 +35,7 @@ class spectrum:
     def __init__(self, path):  # this is a constructor method that initializes automatically the attributes of the class when a `spectrum` object is created
         self.wave, self.Edd_flux, self.Edd_continuum, self.normalized_flux = np.loadtxt(path, unpack=True, dtype=float, comments="#")
 
-save = False  
+save = True  
 if not save:
     print("Spectra will not be saved to text files. Set `save = True` inside the script to save them.")
     
@@ -96,17 +96,17 @@ plt.show()
 
 
 if save:
-    np.savetxt('hot_star_Teff+29000_logg+4.5_m+0.0_vmic+10_vsini+20_R+50000_air.txt', np.column_stack((hot_star_spectrum.wave, 4*np.pi*hot_star_spectrum.Edd_flux)), fmt='%.6e', header='wavelength_Angstrom    flux', comments=None)
-    np.savetxt('norm_hot_star_Teff+29000_logg+4.5_m+0.0_vmic+10_vsini+20_R+50000_air.txt', np.column_stack((hot_star_spectrum.wave, hot_star_spectrum.normalized_flux)), fmt='%.6e', header='wavelength_Angstrom    flux', comments=None)
+    np.savetxt('hot_star_Teff+29000_logg+4.5_m+0.0_vmic+10_vsini+20_R+50000_air.txt', np.column_stack((hot_star_spectrum.wave, 4*np.pi*hot_star_spectrum.Edd_flux)), fmt='%.6e', header='wavelength_Angstrom    flux', comments='')
+    np.savetxt('norm_hot_star_Teff+29000_logg+4.5_m+0.0_vmic+10_vsini+20_R+50000_air.txt', np.column_stack((hot_star_spectrum.wave, hot_star_spectrum.normalized_flux)), fmt='%.6e', header='wavelength_Angstrom    flux', comments='')
 
-    np.savetxt('blap_Teff+29000_logg+4.5_m+0.0_vmic+10_vsini+20_R+50000_air.txt', np.column_stack((blap_spectrum.wave, 4*np.pi*blap_spectrum.Edd_flux)), fmt='%.6e', header='wavelength_Angstrom    flux', comments=None)
-    np.savetxt('norm_blap_Teff+29000_logg+4.5_m+0.0_vmic+10_vsini+20_R+50000_air.txt', np.column_stack((blap_spectrum.wave, blap_spectrum.normalized_flux)), fmt='%.6e', header='wavelength_Angstrom    flux', comments=None)
+    np.savetxt('blap_Teff+29000_logg+4.5_m+0.0_vmic+10_vsini+20_R+50000_air.txt', np.column_stack((blap_spectrum.wave, 4*np.pi*blap_spectrum.Edd_flux)), fmt='%.6e', header='wavelength_Angstrom    flux', comments='')
+    np.savetxt('norm_blap_Teff+29000_logg+4.5_m+0.0_vmic+10_vsini+20_R+50000_air.txt', np.column_stack((blap_spectrum.wave, blap_spectrum.normalized_flux)), fmt='%.6e', header='wavelength_Angstrom    flux', comments='')
 
-    np.savetxt('vega_Teff+9550_logg+4.1_m-0.5_vmic+3_vsini+21_R+30000_air.txt', np.column_stack((vega_spectrum.wave, 4*np.pi*vega_spectrum.Edd_flux)), fmt='%.6e', header='wavelength_Angstrom    flux', comments=None)
-    np.savetxt('norm_vega_Teff+9550_logg+4.1_m-0.5_vmic+3_vsini+21_R+30000_air.txt', np.column_stack((vega_spectrum.wave, vega_spectrum.normalized_flux)), fmt='%.6e', header='wavelength_Angstrom    flux', comments=None)
+    np.savetxt('vega_Teff+9550_logg+4.1_m-0.5_vmic+3_vsini+21_R+30000_air.txt', np.column_stack((vega_spectrum.wave, 4*np.pi*vega_spectrum.Edd_flux)), fmt='%.6e', header='wavelength_Angstrom    flux', comments='')
+    np.savetxt('norm_vega_Teff+9550_logg+4.1_m-0.5_vmic+3_vsini+21_R+30000_air.txt', np.column_stack((vega_spectrum.wave, vega_spectrum.normalized_flux)), fmt='%.6e', header='wavelength_Angstrom    flux', comments='')
 
-    np.savetxt('sun_Teff+5772_logg+4.438_m+0.0_vmic+1_vsini+2_R+30000_air.txt', np.column_stack((sun_spectrum.wave, 4*np.pi*sun_spectrum.Edd_flux)), fmt='%.6e', header='wavelength_Angstrom    flux', comments=None)
-    np.savetxt('norm_sun_Teff+5772_logg+4.438_m+0.0_vmic+1_vsini+2_R+30000_air.txt', np.column_stack((sun_spectrum.wave, sun_spectrum.normalized_flux)), fmt='%.6e', header='wavelength_Angstrom    flux', comments=None)
+    np.savetxt('sun_Teff+5772_logg+4.438_m+0.0_vmic+1_vsini+2_R+30000_air.txt', np.column_stack((sun_spectrum.wave, 4*np.pi*sun_spectrum.Edd_flux)), fmt='%.6e', header='wavelength_Angstrom    flux', comments='')
+    np.savetxt('norm_sun_Teff+5772_logg+4.438_m+0.0_vmic+1_vsini+2_R+30000_air.txt', np.column_stack((sun_spectrum.wave, sun_spectrum.normalized_flux)), fmt='%.6e', header='wavelength_Angstrom    flux', comments='')
 
     print("Spectra saved to text files.")
 
