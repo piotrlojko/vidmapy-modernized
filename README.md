@@ -53,7 +53,7 @@ plt.show()
 > [!CAUTION]
 > ### Known issues
 > * TiO and H<sub>2</sub>O lines are not included.
-> * With molecular lines, `synthe.exe` crashes on long wavelength ranges. To avoid this, the code now computes the spectrum in segments spanning **at most a factor of 1.5 in wavelength**  and joins the resulting segments.
+> * With molecular lines, `synthe.exe` crashes on large wavelength ranges. To avoid this, the code now computes the spectrum in segments spanning **at most a factor of 1.5 in wavelength**  and joins the resulting segments.
 > * `synthe.exe` fails when the computed wavelength range starts in the far wing of Lyman α, between about 1220 and 1980 Å. With `molecules=True` the segments avoid this interval by default. **Otherwise `wave_min` should be set above this interval.**
 
 ## Getting Started
