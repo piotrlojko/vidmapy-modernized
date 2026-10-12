@@ -1,5 +1,5 @@
 > [!IMPORTANT]
-> ## This repo is a modern fork of the original `VidmaPy` software by ***Tomasz Różański*** and ***Collaborators***. The code itself is functional and tested.
+> ## This repo is a modern fork of the original `VidmaPy` software by ***Tomasz Różański*** and ***Collaborators***. The code is functional and tested.
 
 
 # VidmaPy - wrapper for Kurucz's ATLAS/SYNTHE codes
